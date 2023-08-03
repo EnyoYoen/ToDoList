@@ -30,7 +30,7 @@ set(SOURCES
     "widgets/popup.cpp"
     "tools/json.cpp"
     "tools/manager.cpp"
-    "../../tools/logger.cpp"
+    "galaxy-tools/logger.cpp"
 )
 
 set(HEADERS
@@ -46,7 +46,7 @@ set(HEADERS
     "tools/json.h"
     "tools/logger.h"
     "tools/manager.h"
-    "../../tools/logger.h"
+    "galaxy-tools/logger.h"
 )
 
 qt_add_resources(SOURCES res.qrc)

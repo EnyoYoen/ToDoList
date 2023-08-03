@@ -1,6 +1,6 @@
 <RCC>
     <qresource>
-        <file alias="whitney.otf">../../assets/fonts/whitney.otf</file>
+        <file alias="whitney.otf">assets/fonts/whitney.otf</file>
         <file alias="sb-arrow-opened.png">assets/images/sb-arrow-opened.png</file>
         <file alias="sb-arrow-closed.png">assets/images/sb-arrow-closed.png</file>
         <file alias="back-arrow.png">assets/images/back-arrow.png</file>

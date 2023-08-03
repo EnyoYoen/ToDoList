@@ -1,0 +1,3 @@
+[submodule "galaxy-tools"]
+	path = galaxy-tools
+	url = https://github.com/EnyoYoen/Galaxy-Tools
