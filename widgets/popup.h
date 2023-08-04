@@ -29,6 +29,7 @@ private:
     QPushButton *okButton = nullptr;
     QPushButton *cancelButton = nullptr;
     std::vector<QLineEdit *> inputs;
+    int focusedWidget = 0; // -2 : okButton / -1 : cancelButton / positive integer : prompt index
 };
 
 #endif

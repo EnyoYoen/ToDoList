@@ -3,6 +3,8 @@
 #include "filters.h"
 #include "../tools/logger.h"
 
+#include <QShortcut>
+
 PopUp::PopUp(QStringList prompts, QString title, QWidget *p)
     : Clickable([this](QMouseEvent *e) {
         QRect r = content->rect();
@@ -38,16 +40,19 @@ PopUp::PopUp(QStringList prompts, QString title, QWidget *p)
 
         if (i == 0) {
             input->setFocus();
-        } else if (i == prompts.size() - 1) {
+        }
+        if (i == prompts.size() - 1) {
             QObject::connect(input, &QLineEdit::returnPressed, [this]() {
                 QStringList prompts;
                 for (auto input : inputs) {
                     prompts.append(input->text());
                 }
+                focusedWidget = -2;
                 emit result(false, prompts);
             });
         } else {
             QObject::connect(input, &QLineEdit::returnPressed, [this, i]() {
+                focusedWidget = i+1;
                 inputs[i+1]->setFocus();
             });
         }
@@ -57,6 +62,22 @@ PopUp::PopUp(QStringList prompts, QString title, QWidget *p)
     lay->addStretch();
     lay->addWidget(content, 0, Qt::AlignVCenter);
     lay->addStretch();
+
+    okButton->setDefault(true);
+    cancelButton->setDefault(true);
+    QShortcut *focusShortcut = new QShortcut(QKeySequence(Qt::Key_Tab), this, [this]() {
+        focusedWidget++;
+        if (focusedWidget == inputs.size()) {
+            focusedWidget = -2;
+        }
+        
+        if (focusedWidget == -2)
+            okButton->setFocus();
+        else if (focusedWidget == -1)
+            cancelButton->setFocus();
+        else
+            inputs[focusedWidget]->setFocus();
+    });
 
     content->setProperty("class", "popup-content");
     header->setProperty("class", "popup-header");
