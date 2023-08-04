@@ -105,7 +105,7 @@ void Manager::replaceList(Id listId, JList list)
 
 Id Manager::addList(JList list)
 {
-    Id id = (lists.size() == 0 ? 0 : lists.lastKey() + 1); // TODO : fill available previous ids before adding one ?
+    Id id = getLowestNewId(lists.keys());
     lists.insert(id, list);
     save();
     return id;
@@ -145,7 +145,7 @@ void Manager::replaceSublist(Id list, Id sublistId, JSublist sublist)
 Id Manager::addSublist(Id list, JSublist sublist)
 {
     auto sublists = lists[list].sublists;
-    Id id = (sublists.size() == 0 ? 0 : sublists.lastKey() + 1); // TODO : fill available previous ids before adding one ? Maybe create an Id class
+    Id id = getLowestNewId(sublists.keys());
     sublists.insert(id, sublist);
     lists[list].sublists = sublists;
     sublistsOrder[list].append(id);
@@ -187,7 +187,7 @@ void Manager::replaceElement(Id list, Id sublist, Id elementId, JElement element
 Id Manager::addElement(Id list, Id sublist, JElement element)
 {
     auto elements = lists[list].sublists[sublist].elements;
-    Id id = (elements.size() == 0 ? 0 : elements.lastKey() + 1); // TODO : fill available previous ids before adding one ? Maybe create an Id class
+    Id id = getLowestNewId(elements.keys());
     lists[list].sublists[sublist].elements.insert(id, element);
     elementsOrder[list][sublist].append(id);
     save();
@@ -208,4 +208,24 @@ QList<Id> Manager::getElements(Id list, Id sublist)
 QStringList Manager::getRecents()
 {
     return recent;
+}
+
+// Maybe we can optimize
+Id Manager::getLowestNewId(QList<Id> ids)
+{
+    qsizetype size = ids.size();
+    if (size == 0 || ids[0] > 0)
+        return 0;
+
+    std::sort(ids.begin(), ids.end());
+        
+    Id previousId = ids[0];
+    qsizetype i = 1;
+    while (i < size) {
+        if (ids[i] > previousId + 1)
+            return previousId + 1;
+        previousId++;
+        i++;
+    }
+    return ids.last() + 1;
 }

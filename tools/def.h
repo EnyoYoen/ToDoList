@@ -2,5 +2,5 @@
 #include <QPair>
 
 typedef QPair<QString, QString> QStringPair;
-typedef size_t Id;
+typedef quint64 Id;
 #define InvalidId (Id)-1

@@ -6,7 +6,7 @@
 
 #include <iostream>
 
-List::List(size_t m_id, QWidget *p)
+List::List(Id m_id, QWidget *p)
     : id(m_id), QWidget(p)
 {
     JList jlist = Manager::getList(id);

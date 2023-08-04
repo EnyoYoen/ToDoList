@@ -35,6 +35,8 @@ public:
     static QStringList getRecents();
     
 private:
+    static Id getLowestNewId(QList<Id> ids);
+
     static QMap<Id, JList> lists; // {id: list}
     static QMap<Id, QList<Id>> sublistsOrder; // {listId: [sublistId, ...]}
     static QMap<Id, QMap<Id, QList<Id>>> elementsOrder; // {listId: {sublistId: [elementId, ...]}}
