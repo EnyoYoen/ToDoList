@@ -35,7 +35,10 @@ PopUp::PopUp(QStringList prompts, QString title, QWidget *p)
         contentLay->addWidget(input);
         inputs.push_back(input);
         input->setProperty("class", "popup-input");
-        if (i == prompts.size() - 1) {
+
+        if (i == 0) {
+            input->setFocus();
+        } else if (i == prompts.size() - 1) {
             QObject::connect(input, &QLineEdit::returnPressed, [this]() {
                 QStringList prompts;
                 for (auto input : inputs) {

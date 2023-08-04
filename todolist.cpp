@@ -142,8 +142,7 @@ void ToDoList::addList()
 
 void ToDoList::createHomeList(Id id)
 {
-    qDebug() << id;
-    Clickable *container = new Clickable([this, id](QMouseEvent *e) { openList(id); qDebug() << id; }, listsContainer);
+    Clickable *container = new Clickable([this, id](QMouseEvent *e) { openList(id); }, listsContainer);
     QHBoxLayout *containerLay = new QHBoxLayout(container);
     JList list = Manager::getList(id);
     QLabel *listTitle = new QLabel(list.title, container);
