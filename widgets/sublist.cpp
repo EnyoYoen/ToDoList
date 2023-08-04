@@ -21,6 +21,17 @@ Sublist::Sublist(Id m_list, Id m_sublist, QWidget *p)
     }, "bin", titleContainer);
     title = new QLabel(jsublist.title, this);
     addButton = new QPushButton(this);
+    elementsScroll = new QScrollArea(this);
+    elementsContainer = new QWidget(elementsScroll);
+    elementsLay = new QVBoxLayout(elementsContainer);
+
+    elementsLay->setContentsMargins(0, 0, 0, 0);
+    elementsLay->setSpacing(6);
+    elementsLay->addStretch();
+    elementsScroll->setWidget(elementsContainer);
+    elementsScroll->setWidgetResizable(true);
+    elementsScroll->setAttribute(Qt::WA_StyledBackground, true);
+    elementsScroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
     HoverFilter *f = new HoverFilter(
         [this](QEnterEvent *) {
@@ -42,16 +53,19 @@ Sublist::Sublist(Id m_list, Id m_sublist, QWidget *p)
     titleLay->addWidget(title, 0, Qt::AlignHCenter);
     titleLay->addStretch();
     titleLay->addWidget(deleteButton, 0, Qt::AlignVCenter);
+    titleLay->setContentsMargins(0, 0, 0, 0);
     lay->addWidget(titleContainer);
+    lay->addWidget(elementsScroll);
 
     for (auto elementId : Manager::getElements(list, sublist))
         createElement(QString(), QString(), elementId);
-    lay->addStretch();
     lay->addWidget(addButton, 0, Qt::AlignHCenter);
     lay->addSpacing(5);
     lay->setSpacing(6);
 
     title->setProperty("class", "sublist-title");
+    elementsScroll->setProperty("class", "sublist-scroll");
+    elementsContainer->setProperty("class", "sublist-container");
     addButton->setProperty("class", "sublist-add-button");
     setProperty("class", "sublist");
 
@@ -83,46 +97,44 @@ void Sublist::deselect()
     // TODO : add border when selected and remove it in deselect
 }
 
-bool Sublist::dropElement(Element *element, Id elementId, Id fromSublist, int y)
+bool Sublist::dropElement(Id elementId, Id fromSublist, int y, int elementHeight)
 {
     // TODO : Maybe replace with runtime values?
     #define L_LIMIT_OFFSET -10
     #define H_LIMIT_OFFSET 10 
 
     if (y >= this->y() + title->pos().y() + title->height() + L_LIMIT_OFFSET && y <= this->y() + addButton->y() + H_LIMIT_OFFSET) { // in the y limits
-        int elementHeight = element->height();
-
         y -= this->y() + title->pos().y() + title->height() + L_LIMIT_OFFSET;
         int pos = y * 2 / (elementHeight + 6) - 1;
-        if (pos % 2) 
-            pos++;
-        if (pos / 2 > elements.size() + 1)
-            pos = elements.size() * 2 + 1;
-        pos /= 2;
-
-        lay->insertWidget(pos + 1, element);
+        pos = (pos + 1) / 2;
+        if (pos > elements.size())
+            pos = elements.size();
 
         JElement jelement = Manager::getElement(list, fromSublist, elementId);
         Manager::removeElement(list, fromSublist, elementId);
-        elementId = Manager::addElement(list, sublist, jelement);
-        Manager::setIndexElement(list, sublist, elementId, pos);
+        createElement(jelement.name, jelement.content, InvalidId, pos);
 
         return true;
     }
     return false;
 }
 
-void Sublist::createElement(QString name, QString content, Id elementId)
+void Sublist::createElement(QString name, QString content, Id elementId, int index)
 {
-    int position = lay->count();
+    int position = elementsLay->count() - 1;
+    if (index != -1 && index < elementsLay->count() - 1) {
+        position = index;
+    }
     if (elementId == InvalidId) {
         JElement jelement(name, content);
         elementId = Manager::addElement(list, sublist, jelement);
-        position -= 3;
+        if (index != -1)
+            Manager::setIndexElement(list, sublist, elementId, position);
     }
     Element *element = new Element(list, sublist, elementId, this);
-    lay->insertWidget(position, element);
+    elementsLay->insertWidget(position, element);
     elements.append(element);
+
     QObject::connect(element, &Element::changeButtonClicked, [this, element, elementId]() {
         QList<QStringPair> prompts;
         prompts.append(QStringPair("Name", Manager::getElement(list, sublist, elementId).name));
@@ -137,7 +149,6 @@ void Sublist::createElement(QString name, QString content, Id elementId)
         emit popupRequest(QList<QStringPair>(), "Are you sure?", [this, element, elementId](bool cancelled, QStringList prompts) {
             if (!cancelled) {
                 Manager::removeElement(list, sublist, elementId);
-                elements.removeAll(element);
                 element->deleteLater();
             }
         });
@@ -150,6 +161,7 @@ void Sublist::createElement(QString name, QString content, Id elementId)
 
 void Sublist::mousePressEvent(QMouseEvent *e)
 {
+    qDebug() << "sublist";
     press = true;
     emit pressed(e->position());
 }

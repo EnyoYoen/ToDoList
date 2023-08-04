@@ -7,6 +7,7 @@
 
 #include <QLabel>
 #include <QPushButton>
+#include <QScrollArea>
 #include <QVBoxLayout>
 
 class Sublist : public QLabel
@@ -17,7 +18,7 @@ public:
 
     void rename(QString name);
     void deselect();
-    bool dropElement(Element *element, Id elementId, Id fromSublist, int y);
+    bool dropElement(Id elementId, Id fromSublist, int y, int elementHeight);
 
     QVBoxLayout *lay = nullptr; 
 
@@ -33,14 +34,17 @@ public slots:
 
 private:
     QLabel *title = nullptr;
-    QPushButton *addButton = nullptr;
     IconButton *renameButton = nullptr;
     IconButton *deleteButton = nullptr;
+    QScrollArea *elementsScroll = nullptr;
+    QWidget *elementsContainer = nullptr;
+    QVBoxLayout *elementsLay = nullptr;
+    QPushButton *addButton = nullptr;
     QList<Element *> elements;
     Id list, sublist;
     bool press = false;
 
-    void createElement(QString name, QString content, Id elementId);
+    void createElement(QString name, QString content, Id elementId, int index = -1);
 
     virtual void mousePressEvent(QMouseEvent *e);
 };

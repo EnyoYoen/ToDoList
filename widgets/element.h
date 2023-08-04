@@ -20,11 +20,11 @@ signals:
     void changeButtonClicked();
     void deleteButtonClicked();
     void pressed(QPointF offset, QPointF pos);
-    void released(QPointF pos);
-    void moved(QPointF pos);
 
 private:
     QVBoxLayout *lay = nullptr; 
+    QWidget *container = nullptr;
+    QVBoxLayout *containerLay = nullptr;
     QWidget *header = nullptr;
     QHBoxLayout *headerLay = nullptr;
     QLabel *name = nullptr;

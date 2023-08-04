@@ -15,7 +15,9 @@ Element::Element(Id m_list, Id m_sublist, Id m_element, QWidget *p)
     JElement jelement = Manager::getElement(list, sublist, element);
 
     lay = new QVBoxLayout(this);
-    header = new QWidget(this);
+    container = new QWidget(this);
+    containerLay = new QVBoxLayout(container);
+    header = new QWidget(container);
     headerLay = new QHBoxLayout(header);
     name = new QLabel(jelement.name, header);
     changeButton = new IconButton([this]() {
@@ -24,7 +26,7 @@ Element::Element(Id m_list, Id m_sublist, Id m_element, QWidget *p)
     deleteButton = new IconButton([this]() {
         emit deleteButtonClicked();
     }, "bin", header, 20);
-    content = new QLabel(jelement.content, this);
+    content = new QLabel(jelement.content, container);
 
     changeButton->hide();
     deleteButton->hide();
@@ -36,9 +38,13 @@ Element::Element(Id m_list, Id m_sublist, Id m_element, QWidget *p)
     headerLay->setContentsMargins(0, 0, 0, 0);
     name->setMinimumHeight(20);
 
-    lay->addWidget(header);
-    lay->addWidget(content);
-    lay->setSpacing(5);
+    containerLay->addWidget(header);
+    containerLay->addWidget(content);
+    containerLay->setSpacing(5);
+    containerLay->setContentsMargins(10, 8, 10, 8);
+
+    lay->addWidget(container);
+    lay->setContentsMargins(0, 0, 0, 0);
 
     name->setProperty("class", "element-title");
     content->setProperty("class", "element-content");
@@ -72,5 +78,6 @@ void Element::leaveEvent(QEvent *)
 void Element::mousePressEvent(QMouseEvent *e)
 {
     press = true;
+    qDebug() << "pressed";
     emit pressed(e->position(), e->scenePosition());
 }

@@ -178,6 +178,15 @@ QLabel.sublist-title {
     color: #feffff;
 }
 
+QScrollArea.sublist-scroll {
+    background-color: #1f2024;
+    border: none;
+}
+
+QWidget.sublist-container {
+    background-color: #1f2024;
+}
+
 QPushButton.sublist-add-button {
     border: none;
     image: url(":/cross.png");

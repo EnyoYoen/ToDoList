@@ -177,6 +177,7 @@ void List::createSublist(QString title, Id sublistId)
     });
 
     QObject::connect(sublist, &Sublist::elementPressed, [this, sublist, sublistId](QPointF offset, QPointF pos, Id elementId, int layPos, Element *m_element) {
+        qDebug() << "element pressed";
         element = m_element;
         elementSublist = sublist;
         elementDragOffset = offset + sublistsContainer->pos();
@@ -205,7 +206,9 @@ void List::mousePressEvent(QMouseEvent *e)
 
 void List::mouseReleaseEvent(QMouseEvent *e)
 {
+    qDebug() << "released";
     if (elementPressed) {
+        qDebug() << "AA-";
         // Determine the sublist on which we put the element
         QPoint center = element->pos() + element->contentsRect().center();
         size_t min = -1;
@@ -219,7 +222,9 @@ void List::mouseReleaseEvent(QMouseEvent *e)
         }
 
         // Drop the element or replace it 
-        if (!hoveredSublist->dropElement(element, elementPressedId, sublistPressedId, element->y() + element->height() / 2)) {
+        if (hoveredSublist->dropElement(elementPressedId, sublistPressedId, element->y() + element->height() / 2, element->height())) {
+            element->deleteLater();
+        } else {
             lay->removeWidget(element);
             element->setParent(elementSublist);
             elementSublist->lay->insertWidget(elementLayPos, element);
@@ -252,6 +257,7 @@ void List::mouseReleaseEvent(QMouseEvent *e)
 
 void List::mouseMoveEvent(QMouseEvent *e)
 {
+    qDebug() << e->scenePosition() << elementPressed;
     if (elementPressed) {
         QPointF fpos(e->position() - elementDragOffset);
         element->move(fpos.x(), fpos.y());
