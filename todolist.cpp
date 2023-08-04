@@ -107,6 +107,8 @@ ToDoList::ToDoList(/*bool hasSidebar, */QWidget *p)
 
 void ToDoList::addList()
 {
+    if (popup)
+        popup->deleteLater();
     QVector<QString> prompts;
     prompts.append("Name");
     popup = new PopUp(prompts, "Name the list", this);
@@ -140,7 +142,8 @@ void ToDoList::addList()
 
 void ToDoList::createHomeList(Id id)
 {
-    Clickable *container = new Clickable([this, id](QMouseEvent *e) { openList(id); }, listsContainer);
+    qDebug() << id;
+    Clickable *container = new Clickable([this, id](QMouseEvent *e) { openList(id); qDebug() << id; }, listsContainer);
     QHBoxLayout *containerLay = new QHBoxLayout(container);
     JList list = Manager::getList(id);
     QLabel *listTitle = new QLabel(list.title, container);

@@ -17,6 +17,8 @@ List::List(size_t m_id, QWidget *p)
     backButton = new QPushButton(header);
     title = new QLabel(jlist.title, header);
     editNameButton = new IconButton([this]() {
+        if (popup)
+            popup->deleteLater();
         QStringList prompts;
         prompts.append("Name");
         popup = new PopUp(prompts, "Rename the list", this);
@@ -34,6 +36,8 @@ List::List(size_t m_id, QWidget *p)
         });
     }, "pen", header);
     deleteButton = new IconButton([this]() {
+        if (popup)
+            popup->deleteLater();
         popup = new PopUp(QStringList(), "Are you sure ?", this);
         QObject::connect(popup, &PopUp::result, [this](bool cancelled, QStringList prompts) {
             if (!cancelled) {
@@ -97,6 +101,8 @@ void List::newElement()
 
 void List::addSublist()
 {
+    if (popup)
+        popup->deleteLater();
     QStringList prompts;
     prompts.append("Name");
     popup = new PopUp(prompts, "Name the sublist", this);
@@ -123,6 +129,8 @@ void List::createSublist(QString title, Id sublistId)
     sublists.append(sublist);
 
     QObject::connect(sublist, &Sublist::renameButtonClicked, [this, sublist]() {
+        if (popup)
+            popup->deleteLater();
         QStringList prompts;
         prompts.append("Name");
         popup = new PopUp(prompts, "Rename the sublist", this);
@@ -135,6 +143,8 @@ void List::createSublist(QString title, Id sublistId)
         });
     });
     QObject::connect(sublist, &Sublist::deleteButtonClicked, [this, sublist, sublistId]() {
+        if (popup)
+            popup->deleteLater();
         popup = new PopUp(QStringList(), "Are you sure ?", this);
         QObject::connect(popup, &PopUp::result, [this, sublist, sublistId](bool cancelled, QStringList prompts) {
             if (!cancelled) {
@@ -148,6 +158,8 @@ void List::createSublist(QString title, Id sublistId)
         });
     });
     QObject::connect(sublist, &Sublist::popupRequest, [this](QStringList prompts, QString title, std::function<void(bool, QStringList)> handler) {
+        if (popup)
+            popup->deleteLater();
         popup = new PopUp(prompts, title, this);
         QObject::connect(popup, &PopUp::result, [this, handler](bool cancelled, QStringList prompts) {
             handler(cancelled, prompts);
