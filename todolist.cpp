@@ -75,17 +75,20 @@ ToDoList::ToDoList(/*bool hasSidebar, */QWidget *p)
     });
     installEventFilter(f);
 
+    // TODO : Add shortcuts to README 
     QShortcut *addElementShortcut = new QShortcut(QKeySequence(Qt::CTRL | Qt::Key_Plus), this, [this]() {
         if (!homeShown)
             listShown->newElement(); // TODO : not working
     });
-    QShortcut *addShortcut = new QShortcut(QKeySequence(Qt::Key_Plus), this, [this]() {
+    auto addLambda = [this]() {
         if (homeShown) {
             addList();
         } else {
             listShown->addSublist();
         }
-    });
+    };
+    QShortcut *addShortcut = new QShortcut(QKeySequence(Qt::Key_Plus), this, addLambda);
+    QShortcut *addCtrlShortcut = new QShortcut(QKeySequence(Qt::CTRL | Qt::Key_A), this, addLambda);
 
     if (QFontDatabase::addApplicationFont(":/whitney.otf")) {
         logger.warn("Can't add application font : whitney");
@@ -101,6 +104,10 @@ ToDoList::ToDoList(/*bool hasSidebar, */QWidget *p)
     style.open(QFile::ReadOnly);
     QString styleSheet = QLatin1String(style.readAll());
     setStyleSheet(styleSheet);
+
+#ifndef DL
+    setFixedSize(1000, 800);
+#endif
     
     QObject::connect(newListButton, &QPushButton::clicked, this, &ToDoList::addList);
 }
@@ -109,8 +116,8 @@ void ToDoList::addList()
 {
     if (popup)
         popup->deleteLater();
-    QVector<QString> prompts;
-    prompts.append("Name");
+    QList<QStringPair> prompts;
+    prompts.append(QStringPair("Name", QString()));
     popup = new PopUp(prompts, "Name the list", this);
     QObject::connect(popup, &PopUp::result, [this](bool cancelled, QStringList prompts) {
         if (!cancelled && !prompts.isEmpty() && !prompts[0].isEmpty()) {

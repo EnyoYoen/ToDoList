@@ -19,8 +19,8 @@ List::List(size_t m_id, QWidget *p)
     editNameButton = new IconButton([this]() {
         if (popup)
             popup->deleteLater();
-        QStringList prompts;
-        prompts.append("Name");
+        QList<QStringPair> prompts;
+        prompts.append(QStringPair("Name", Manager::getList(id).title));
         popup = new PopUp(prompts, "Rename the list", this);
         QObject::connect(popup, &PopUp::result, [this](bool cancelled, QStringList prompts) {
             if (!cancelled && !prompts.isEmpty() && !prompts[0].isEmpty()) {
@@ -38,7 +38,7 @@ List::List(size_t m_id, QWidget *p)
     deleteButton = new IconButton([this]() {
         if (popup)
             popup->deleteLater();
-        popup = new PopUp(QStringList(), "Are you sure ?", this);
+        popup = new PopUp(QList<QStringPair>(), "Are you sure ?", this);
         QObject::connect(popup, &PopUp::result, [this](bool cancelled, QStringList prompts) {
             if (!cancelled) {
                 Manager::removeList(id);
@@ -103,8 +103,8 @@ void List::addSublist()
 {
     if (popup)
         popup->deleteLater();
-    QStringList prompts;
-    prompts.append("Name");
+    QList<QStringPair> prompts;
+    prompts.append(QStringPair("Name", QString()));
     popup = new PopUp(prompts, "Name the sublist", this);
     QObject::connect(popup, &PopUp::result, [this](bool cancelled, QStringList prompts) {
         if (!cancelled && !prompts.isEmpty() && !prompts[0].isEmpty()) {
@@ -128,11 +128,11 @@ void List::createSublist(QString title, Id sublistId)
     sublistsContainerLay->insertWidget(sublistsContainerLay->count() + offset, sublist);
     sublists.append(sublist);
 
-    QObject::connect(sublist, &Sublist::renameButtonClicked, [this, sublist]() {
+    QObject::connect(sublist, &Sublist::renameButtonClicked, [this, sublist, sublistId]() {
         if (popup)
             popup->deleteLater();
-        QStringList prompts;
-        prompts.append("Name");
+        QList<QStringPair> prompts;
+        prompts.append(QStringPair("Name", Manager::getSublist(id, sublistId).title));
         popup = new PopUp(prompts, "Rename the sublist", this);
         QObject::connect(popup, &PopUp::result, [this, sublist](bool cancelled, QStringList prompts) {
             if (!cancelled && !prompts.isEmpty() && !prompts[0].isEmpty()) {
@@ -145,7 +145,7 @@ void List::createSublist(QString title, Id sublistId)
     QObject::connect(sublist, &Sublist::deleteButtonClicked, [this, sublist, sublistId]() {
         if (popup)
             popup->deleteLater();
-        popup = new PopUp(QStringList(), "Are you sure ?", this);
+        popup = new PopUp(QList<QStringPair>(), "Are you sure ?", this);
         QObject::connect(popup, &PopUp::result, [this, sublist, sublistId](bool cancelled, QStringList prompts) {
             if (!cancelled) {
                 Manager::removeSublist(id, sublistId);
@@ -157,7 +157,7 @@ void List::createSublist(QString title, Id sublistId)
             popup = nullptr;
         });
     });
-    QObject::connect(sublist, &Sublist::popupRequest, [this](QStringList prompts, QString title, std::function<void(bool, QStringList)> handler) {
+    QObject::connect(sublist, &Sublist::popupRequest, [this](QList<QStringPair> prompts, QString title, std::function<void(bool, QStringList)> handler) {
         if (popup)
             popup->deleteLater();
         popup = new PopUp(prompts, title, this);

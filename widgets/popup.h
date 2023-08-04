@@ -2,6 +2,7 @@
 #define POPUP
 
 #include "clickable.h"
+#include "../tools/def.h"
 
 #include <QWidget>
 #include <QLabel>
@@ -14,7 +15,7 @@ class PopUp : public Clickable
 {
     Q_OBJECT
 public:
-    PopUp(QStringList prompts, QString title, QWidget *p);
+    PopUp(QList<QStringPair> prompts, QString title, QWidget *p);
 
 signals:
     void result(bool cancelled, QStringList prompts);

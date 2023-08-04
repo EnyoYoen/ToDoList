@@ -5,7 +5,7 @@
 
 #include <QShortcut>
 
-PopUp::PopUp(QStringList prompts, QString title, QWidget *p)
+PopUp::PopUp(QList<QStringPair> prompts, QString title, QWidget *p)
     : Clickable([this](QMouseEvent *e) {
         QRect r = content->rect();
         r.translate(content->pos());
@@ -33,7 +33,9 @@ PopUp::PopUp(QStringList prompts, QString title, QWidget *p)
     contentLay->addWidget(header);
     for (qsizetype i = 0 ; i < prompts.size() ; i++) {
         QLineEdit *input = new QLineEdit(content);
-        input->setPlaceholderText(prompts[i]);
+        input->setPlaceholderText(prompts[i].first);
+        if (!prompts[i].second.isNull() && !prompts[i].second.isEmpty()) 
+            input->setText(prompts[i].second);
         contentLay->addWidget(input);
         inputs.push_back(input);
         input->setProperty("class", "popup-input");
@@ -77,6 +79,9 @@ PopUp::PopUp(QStringList prompts, QString title, QWidget *p)
             cancelButton->setFocus();
         else
             inputs[focusedWidget]->setFocus();
+    });
+    QShortcut *echapShortcut = new QShortcut(QKeySequence(Qt::Key_Escape), this, [this]() {
+        emit result(true, QStringList());
     });
 
     content->setProperty("class", "popup-content");

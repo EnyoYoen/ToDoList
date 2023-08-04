@@ -5,8 +5,6 @@
 #include "../tools/manager.h"
 #include "../tools/logger.h"
 
-#include <iostream>
-
 Sublist::Sublist(Id m_list, Id m_sublist, QWidget *p)
     : list(m_list), sublist(m_sublist), QLabel(p)
 {
@@ -71,9 +69,9 @@ void Sublist::rename(QString name)
 
 void Sublist::newElement()
 {
-    QStringList prompts;
-    prompts.append("Name");
-    prompts.append("Content");
+    QList<QStringPair> prompts;
+    prompts.append(QStringPair("Name", QString()));
+    prompts.append(QStringPair("Content", QString()));
     emit popupRequest(prompts, "Create the new element", [this](bool cancelled, QStringList prompts) {
         if (!cancelled && !prompts.empty() && !prompts[0].isEmpty())
             createElement(prompts[0], prompts[1], InvalidId);
@@ -125,10 +123,10 @@ void Sublist::createElement(QString name, QString content, Id elementId)
     Element *element = new Element(list, sublist, elementId, this);
     lay->insertWidget(position, element);
     elements.append(element);
-    QObject::connect(element, &Element::changeButtonClicked, [this, element]() {
-        QStringList prompts;
-        prompts.append("Name");
-        prompts.append("Content");
+    QObject::connect(element, &Element::changeButtonClicked, [this, element, elementId]() {
+        QList<QStringPair> prompts;
+        prompts.append(QStringPair("Name", Manager::getElement(list, sublist, elementId).name));
+        prompts.append(QStringPair("Content", Manager::getElement(list, sublist, elementId).content));
         emit popupRequest(prompts, "Change the element", [this, element](bool cancelled, QStringList prompts) {
             if (!cancelled && !prompts.empty() && !prompts[0].isEmpty()) {
                 element->setNameAndContent(prompts[0], prompts[1]);
@@ -136,7 +134,7 @@ void Sublist::createElement(QString name, QString content, Id elementId)
         });
     });
     QObject::connect(element, &Element::deleteButtonClicked, [this, element, elementId]() {
-        emit popupRequest(QStringList(), "Are you sure?", [this, element, elementId](bool cancelled, QStringList prompts) {
+        emit popupRequest(QList<QStringPair>(), "Are you sure?", [this, element, elementId](bool cancelled, QStringList prompts) {
             if (!cancelled) {
                 Manager::removeElement(list, sublist, elementId);
                 elements.removeAll(element);

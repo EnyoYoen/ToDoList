@@ -24,7 +24,7 @@ public:
 signals:
     void renameButtonClicked();
     void deleteButtonClicked();
-    void popupRequest(QStringList prompts, QString title, std::function<void(bool, QStringList)> handler);
+    void popupRequest(QList<QStringPair> prompts, QString title, std::function<void(bool, QStringList)> handler);
     void pressed(QPointF offset);
     void elementPressed(QPointF offset, QPointF pos, Id elementId, int layPos, Element *element);
 
