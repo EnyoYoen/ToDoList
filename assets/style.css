@@ -199,12 +199,12 @@ QWidget.element {
 
 QLabel.element-title {
     font-family: "Whitney"; 
-    font-size: 16px;
+    font-size: 18px;
     color: #bdbdbd;
 }
 
 QLabel.element-content {
     font-family: "Whitney"; 
-    font-size: 12px;
+    font-size: 14px;
     color: #acacac;
 }

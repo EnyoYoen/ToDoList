@@ -104,10 +104,6 @@ ToDoList::ToDoList(/*bool hasSidebar, */QWidget *p)
     style.open(QFile::ReadOnly);
     QString styleSheet = QLatin1String(style.readAll());
     setStyleSheet(styleSheet);
-
-#ifndef DL
-    setFixedSize(1000, 800);
-#endif
     
     QObject::connect(newListButton, &QPushButton::clicked, this, &ToDoList::addList);
 }

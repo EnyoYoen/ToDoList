@@ -21,17 +21,14 @@ Sublist::Sublist(Id m_list, Id m_sublist, QWidget *p)
     }, "bin", titleContainer);
     title = new QLabel(jsublist.title, this);
     addButton = new QPushButton(this);
-    elementsScroll = new QScrollArea(this);
+    elementsScroll = new VerticalScrollArea(this);
     elementsContainer = new QWidget(elementsScroll);
     elementsLay = new QVBoxLayout(elementsContainer);
 
     elementsLay->setContentsMargins(0, 0, 0, 0);
     elementsLay->setSpacing(6);
     elementsLay->addStretch();
-    elementsScroll->setWidget(elementsContainer);
-    elementsScroll->setWidgetResizable(true);
-    elementsScroll->setAttribute(Qt::WA_StyledBackground, true);
-    elementsScroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    elementsScroll->setContent(elementsContainer);
 
     HoverFilter *f = new HoverFilter(
         [this](QEnterEvent *) {
@@ -161,7 +158,6 @@ void Sublist::createElement(QString name, QString content, Id elementId, int ind
 
 void Sublist::mousePressEvent(QMouseEvent *e)
 {
-    qDebug() << "sublist";
     press = true;
     emit pressed(e->position());
 }

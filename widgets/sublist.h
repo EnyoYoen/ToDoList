@@ -4,10 +4,10 @@
 #include "../tools/json.h"
 #include "element.h"
 #include "iconbutton.h"
+#include "verticalscroll.h"
 
 #include <QLabel>
 #include <QPushButton>
-#include <QScrollArea>
 #include <QVBoxLayout>
 
 class Sublist : public QLabel
@@ -36,7 +36,7 @@ private:
     QLabel *title = nullptr;
     IconButton *renameButton = nullptr;
     IconButton *deleteButton = nullptr;
-    QScrollArea *elementsScroll = nullptr;
+    VerticalScrollArea *elementsScroll = nullptr;
     QWidget *elementsContainer = nullptr;
     QVBoxLayout *elementsLay = nullptr;
     QPushButton *addButton = nullptr;

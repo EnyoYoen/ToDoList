@@ -28,15 +28,18 @@ Element::Element(Id m_list, Id m_sublist, Id m_element, QWidget *p)
     }, "bin", header, 20);
     content = new QLabel(jelement.content, container);
 
-    changeButton->hide();
-    deleteButton->hide();
+    changeButton->setFixedHeight(0);
+    deleteButton->setFixedHeight(0);
 
     headerLay->addWidget(name);
     headerLay->addStretch();
     headerLay->addWidget(changeButton);
     headerLay->addWidget(deleteButton);
     headerLay->setContentsMargins(0, 0, 0, 0);
+
     name->setMinimumHeight(20);
+    name->setWordWrap(true);
+    content->setWordWrap(true);
 
     containerLay->addWidget(header);
     containerLay->addWidget(content);
@@ -65,19 +68,18 @@ void Element::setNameAndContent(QString nameStr, QString contentStr)
 
 void Element::enterEvent(QEnterEvent *)
 {
-    changeButton->show();
-    deleteButton->show();
+    changeButton->setFixedHeight(20);
+    deleteButton->setFixedHeight(20);
 }
 
 void Element::leaveEvent(QEvent *)
 {
-    changeButton->hide();
-    deleteButton->hide();
+    changeButton->setFixedHeight(0);
+    deleteButton->setFixedHeight(0);
 }
 
 void Element::mousePressEvent(QMouseEvent *e)
 {
     press = true;
-    qDebug() << "pressed";
     emit pressed(e->position(), e->scenePosition());
 }
