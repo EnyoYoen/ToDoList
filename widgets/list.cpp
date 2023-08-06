@@ -4,12 +4,10 @@
 #include "../tools/logger.h"
 #include "../tools/manager.h"
 
-#include <iostream>
-
 List::List(Id m_id, QWidget *p)
     : id(m_id), QWidget(p)
 {
-    JList jlist = Manager::getList(id);
+    JList jlist = manager->getList(id);
 
     lay = new QVBoxLayout(this);
     header = new QWidget(this);
@@ -20,15 +18,15 @@ List::List(Id m_id, QWidget *p)
         if (popup)
             popup->deleteLater();
         QList<QStringPair> prompts;
-        prompts.append(QStringPair("Name", Manager::getList(id).title));
+        prompts.append(QStringPair("Name", manager->getList(id).title));
         popup = new PopUp(prompts, "Rename the list", this);
         QObject::connect(popup, &PopUp::result, [this](bool cancelled, QStringList prompts) {
             if (!cancelled && !prompts.isEmpty() && !prompts[0].isEmpty()) {
                 title->setText(prompts[0]);
 
-                JList jlist = Manager::getList(id);
+                JList jlist = manager->getList(id);
                 jlist.title = prompts[0];
-                Manager::replaceList(id, jlist);
+                manager->replaceList(id, jlist);
                 emit renamed();
             }
             popup->deleteLater();
@@ -41,7 +39,7 @@ List::List(Id m_id, QWidget *p)
         popup = new PopUp(QList<QStringPair>(), "Are you sure ?", this);
         QObject::connect(popup, &PopUp::result, [this](bool cancelled, QStringList prompts) {
             if (!cancelled) {
-                Manager::removeList(id);
+                manager->removeList(id);
                 emit deleted();
                 deleteLater();
             }
@@ -53,7 +51,7 @@ List::List(Id m_id, QWidget *p)
     sublistsContainerLay = new QHBoxLayout(sublistsContainer);
     newSublistButton = new QPushButton("Add Sublist", this);
 
-    for (auto sublistId : Manager::getSublists(id))
+    for (auto sublistId : manager->getSublists(id))
         createSublist(QString(), sublistId);
     sublistsContainerLay->setSpacing(10);
 
@@ -90,7 +88,56 @@ List::List(Id m_id, QWidget *p)
     installEventFilter(f);
 
     QObject::connect(backButton, &QPushButton::clicked, [this]() { emit back(); });
-    QObject::connect(newSublistButton, &QPushButton::clicked, this, &List::addSublist);
+    QObject::connect(newSublistButton, &QPushButton::clicked, this, &List::addEmptySublist);
+}
+
+void List::updateList()
+{
+    JList list = manager->getList(id);
+    title->setText(list.title);
+}
+
+void List::changeSublistIndex(Id sublist, size_t index)
+{
+    sublistsContainerLay->insertWidget(index, sublistsContainerLay->takeAt(sublistsContainerLay->indexOf(sublists[sublist]))->widget());
+}
+
+void List::removeSublist(Id sublistId)
+{
+    Sublist *sublist = sublists[sublistId];
+    sublistsContainerLay->removeWidget(sublist);
+    sublists.remove(sublistId);
+    sublist->deleteLater();
+}
+
+void List::updateSublist(Id sublist)
+{
+    sublists[sublist]->updateSublist();
+}
+
+void List::addSublist(Id sublist)
+{
+    createSublist(QString(), sublist);
+}
+
+void List::changeElementIndex(Id sublist, Id element, size_t index)
+{
+    sublists[sublist]->changeElementIndex(element, index);
+}
+
+void List::removeElement(Id sublist, Id element)
+{
+    sublists[sublist]->removeElement(element);
+}   
+
+void List::updateElement(Id sublist, Id element)
+{
+    sublists[sublist]->updateElement(element);
+}
+
+void List::addElement(Id sublist, Id element)
+{
+    sublists[sublist]->addElement(element);
 }
 
 void List::newElement()
@@ -99,7 +146,7 @@ void List::newElement()
         sublist->newElement();
 }
 
-void List::addSublist()
+void List::addEmptySublist()
 {
     if (popup)
         popup->deleteLater();
@@ -121,18 +168,18 @@ void List::createSublist(QString title, Id sublistId)
     int offset = 0;
     if (sublistId == InvalidId) {
         JSublist jsublist(title);
-        sublistId = Manager::addSublist(id, jsublist);
+        sublistId = manager->addSublist(id, jsublist);
         offset = -3;
     }
     Sublist *sublist = new Sublist(id, sublistId, sublistsContainer);
     sublistsContainerLay->insertWidget(sublistsContainerLay->count() + offset, sublist);
-    sublists.append(sublist);
+    sublists.insert(sublistId, sublist);
 
     QObject::connect(sublist, &Sublist::renameButtonClicked, [this, sublist, sublistId]() {
         if (popup)
             popup->deleteLater();
         QList<QStringPair> prompts;
-        prompts.append(QStringPair("Name", Manager::getSublist(id, sublistId).title));
+        prompts.append(QStringPair("Name", manager->getSublist(id, sublistId).title));
         popup = new PopUp(prompts, "Rename the sublist", this);
         QObject::connect(popup, &PopUp::result, [this, sublist](bool cancelled, QStringList prompts) {
             if (!cancelled && !prompts.isEmpty() && !prompts[0].isEmpty()) {
@@ -148,9 +195,9 @@ void List::createSublist(QString title, Id sublistId)
         popup = new PopUp(QList<QStringPair>(), "Are you sure ?", this);
         QObject::connect(popup, &PopUp::result, [this, sublist, sublistId](bool cancelled, QStringList prompts) {
             if (!cancelled) {
-                Manager::removeSublist(id, sublistId);
+                manager->removeSublist(id, sublistId);
                 sublistsContainerLay->removeWidget(sublist);
-                sublists.removeAll(sublist);
+                sublists.remove(sublistId);
                 sublist->deleteLater();
             }
             popup->deleteLater();
@@ -244,7 +291,7 @@ void List::mouseReleaseEvent(QMouseEvent *e)
         if (layoutPos >= sublistsContainerLay->count()) layoutPos--;
         
         sublistsContainerLay->insertWidget(layoutPos, sublistsContainerLay->takeAt(sublistsContainerLay->indexOf(sublist))->widget());
-        Manager::setIndexSublist(id, sublistPressedId, layoutPos);
+        manager->setIndexSublist(id, sublistPressedId, layoutPos);
 
         sublist = nullptr;
         sublistPressedId = InvalidId;

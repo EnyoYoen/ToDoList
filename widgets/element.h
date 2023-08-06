@@ -3,6 +3,7 @@
 
 #include "iconbutton.h"
 #include "../tools/json.h"
+#include "../tools/manager.h"
 
 #include <QWidget>
 #include <QLabel>
@@ -14,7 +15,11 @@ class Element : public QWidget
 public:
     Element(Id list, Id sublist, Id element, QWidget *p);
 
+    void updateElement();
+
     void setNameAndContent(QString nameStr, QString contentStr);
+
+    Id element;
 
 signals:
     void changeButtonClicked();
@@ -31,7 +36,7 @@ private:
     IconButton *changeButton = nullptr;
     IconButton *deleteButton = nullptr;
     QLabel *content = nullptr;
-    Id list, sublist, element;
+    Id list, sublist;
     bool press = false;
 
     virtual void enterEvent(QEnterEvent *);

@@ -47,8 +47,8 @@ private:
     QLabel *scrollTitle = nullptr;
     QPushButton *newListButton = nullptr;
     PopUp *popup = nullptr;
-    QList<Clickable *> homeLists;
-    QList<QLabel *> homeListLabels;
+    QMap<Id, Clickable *> homeLists;
+    QMap<Id, QLabel *> homeListLabels;
     bool homeShown = true;
 
     // Sidebar
@@ -64,7 +64,7 @@ private:
     bool sbOpen = true;
 
     // Lists
-    QList<List *> lists;
+    QMap<Id, List *> lists;
     List *listShown = nullptr;
 };
 

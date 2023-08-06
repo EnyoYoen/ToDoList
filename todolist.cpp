@@ -12,7 +12,7 @@
 ToDoList::ToDoList(/*bool hasSidebar, */QWidget *p)
     : QWidget(p)
 {
-    Manager::load();
+    manager = new Manager();
 
     lay = new QHBoxLayout(this);
     scrollList = new QScrollArea(this);
@@ -35,24 +35,25 @@ ToDoList::ToDoList(/*bool hasSidebar, */QWidget *p)
     scrollLay->addWidget(listsContainer, 0, Qt::AlignHCenter);
     scrollLay->addStretch();
     scrollLay->setSpacing(20);
-    auto jlists = Manager::getLists();
+    auto jlists = manager->getLists();
     for (auto id : jlists) {
-        createHomeList(id); 
+        createHomeList(id);
 
         List *list = new List(id, listsContainer);
         list->hide();
         lay->addWidget(list);
-        lists.append(list);
+        lists.insert(id, list);
 
         QObject::connect(list, &List::back, this, &ToDoList::openHomePage);
-        QObject::connect(list, &List::deleted, [this, list, id]() {
-            homeLists.takeAt(lists.indexOf(list))->deleteLater();
-            homeListLabels.takeAt(lists.indexOf(list));
-            lists.removeAll(list);
+        QObject::connect(list, &List::deleted, [this, id]() {
+            homeLists[id]->deleteLater();
+            homeLists.remove(id);
+            homeListLabels.remove(id);
+            lists.remove(id);
             openHomePage();
         });
-        QObject::connect(list, &List::renamed, [this, list, id]() {
-            homeListLabels[lists.indexOf(list)]->setText(Manager::getList(id).title);
+        QObject::connect(list, &List::renamed, [this, id]() {
+            homeListLabels[id]->setText(manager->getList(id).title);
         });
     }
 
@@ -84,7 +85,7 @@ ToDoList::ToDoList(/*bool hasSidebar, */QWidget *p)
         if (homeShown) {
             addList();
         } else {
-            listShown->addSublist();
+            listShown->addEmptySublist();
         }
     };
     QShortcut *addShortcut = new QShortcut(QKeySequence(Qt::Key_Plus), this, addLambda);
@@ -104,9 +105,57 @@ ToDoList::ToDoList(/*bool hasSidebar, */QWidget *p)
     style.open(QFile::ReadOnly);
     QString styleSheet = QLatin1String(style.readAll());
     setStyleSheet(styleSheet);
+
+    setMinimumSize(800, 600);
     
     QObject::connect(newListButton, &QPushButton::clicked, this, &ToDoList::addList);
+
+    QObject::connect(manager, &Manager::listViewed, [this](Id list, QDateTime timestamp) { /*TODO: sort homelists with timestamps*/ });
+    QObject::connect(manager, &Manager::listRemoved, [this](Id list) {
+        homeLists[list]->deleteLater();
+        homeLists.remove(list);
+        homeListLabels.remove(list);
+        lists[list]->deleteLater();
+        updateLists(scrollList->width());
+    });
+    QObject::connect(manager, &Manager::listReplaced, [this](Id list) {
+        lists[list]->updateList();
+        QList<Id> ids;
+        for (auto list : lists)
+            ids.append(list->id);
+        homeListLabels[ids.indexOf(list)]->setText(manager->getList(list).title);
+    });
+    QObject::connect(manager, &Manager::listAdded, [this](Id listId) {
+        createHomeList(listId);
+        List *list = new List(listId, this);
+        list->hide();
+        lay->addWidget(list);
+        lists.insert(listId, list);
+
+        QObject::connect(list, &List::back, this, &ToDoList::openHomePage);
+        QObject::connect(list, &List::deleted, [this, listId]() {
+            homeLists[listId]->deleteLater();
+            homeLists.remove(listId);
+            homeListLabels.remove(listId);
+            lists.remove(listId);
+            openHomePage();
+            updateLists(scrollList->width());
+        });
+        QObject::connect(list, &List::renamed, [this, list, listId]() { homeListLabels[listId]->setText(manager->getList(listId).title); });
+    });
+
+    QObject::connect(manager, &Manager::sublistIndexChanged, [this](Id list, Id sublist, size_t index) { lists[list]->changeSublistIndex(sublist, index); });
+    QObject::connect(manager, &Manager::sublistRemoved, [this](Id list, Id sublist) { lists[list]->removeSublist(sublist); });
+    QObject::connect(manager, &Manager::sublistReplaced, [this](Id list, Id sublist) { lists[list]->updateSublist(sublist); });
+    QObject::connect(manager, &Manager::sublistAdded, [this](Id list, Id sublist) { lists[list]->addSublist(sublist); });
+
+    QObject::connect(manager, &Manager::elementIndexChanged, [this](Id list, Id sublist, Id element, size_t index) { lists[list]->changeElementIndex(sublist, element, index); });
+    QObject::connect(manager, &Manager::elementRemoved, [this](Id list, Id sublist, Id element) { lists[list]->removeElement(sublist, element); });
+    QObject::connect(manager, &Manager::elementReplaced, [this](Id list, Id sublist, Id element) { lists[list]->updateElement(sublist, element); });
+    QObject::connect(manager, &Manager::elementAdded, [this](Id list, Id sublist, Id element) { lists[list]->addElement(sublist, element); });
 }
+
+// id, homelist timestamp
 
 void ToDoList::addList()
 {
@@ -118,24 +167,25 @@ void ToDoList::addList()
     QObject::connect(popup, &PopUp::result, [this](bool cancelled, QStringList prompts) {
         if (!cancelled && !prompts.isEmpty() && !prompts[0].isEmpty()) {
             size_t i = homeLists.size();
-            Id id = Manager::addList(JList(prompts[0], JList::Default, 0));
+            Id id = manager->addList(JList(prompts[0], JList::Default, 0));
             createHomeList(i);
             
             List *list = new List(i, this);
             list->hide();
             lay->addWidget(list);
-            lists.append(list);
+            lists.insert(id, list);
 
             QObject::connect(list, &List::back, this, &ToDoList::openHomePage);
             QObject::connect(list, &List::deleted, [this, list, id]() {
-                size_t index = lists.indexOf(list);
-                homeLists.takeAt(index)->deleteLater();
-                homeListLabels.takeAt(index);
-                lists.removeAll(list);
+                homeLists[id]->deleteLater();
+                homeLists.remove(id);
+                homeListLabels.remove(id);
+                lists.remove(id);
                 openHomePage();
+                updateLists(scrollList->width());
             });
             QObject::connect(list, &List::renamed, [this, list, id]() {
-                homeListLabels[lists.indexOf(list)]->setText(Manager::getList(id).title);
+                homeListLabels[id]->setText(manager->getList(id).title);
             });
         }
         popup->deleteLater();
@@ -147,15 +197,15 @@ void ToDoList::createHomeList(Id id)
 {
     Clickable *container = new Clickable([this, id](QMouseEvent *e) { openList(id); }, listsContainer);
     QHBoxLayout *containerLay = new QHBoxLayout(container);
-    JList list = Manager::getList(id);
+    JList list = manager->getList(id);
     QLabel *listTitle = new QLabel(list.title, container);
 
     containerLay->addStretch();
     containerLay->addWidget(listTitle, 0, Qt::AlignCenter);
     containerLay->addStretch();
 
-    homeLists.append(container);
-    homeListLabels.append(listTitle);
+    homeLists.insert(id, container);
+    homeListLabels.insert(id, listTitle);
     updateLists(scrollList->width());
 
     container->setFixedSize(200, 200);
@@ -194,7 +244,7 @@ void ToDoList::createSidebar()
     header->setProperty("class", "sidebar-header");
 
     std::vector<std::function<void()>> recentListsHandlers;
-    auto recents = Manager::getRecents();
+    auto recents = manager->getRecents();
     for (Id i = 0 ; i < (Id)recents.size() ; i++) {
         recentListsHandlers.push_back([this, i]() { openList(i); });
     }
@@ -215,14 +265,17 @@ void ToDoList::createSidebar()
 
 void ToDoList::openList(Id id)
 {
+    QList<Id> ids;
+    for (auto list : lists)
+        ids.append(list->id);
     scrollList->hide();
     for (auto list : lists) 
         list->hide();
-    listShown = lists[id]; 
+    listShown = lists[ids.indexOf(id)]; 
     listShown->show();
     homeShown = false;
 
-    Manager::viewList(id);
+    manager->viewList(id);
 }
 
 void ToDoList::openHomePage()
@@ -259,5 +312,5 @@ void ToDoList::showEvent(QShowEvent *e)
 
 void ToDoList::closeEvent(QCloseEvent *)
 {
-    Manager::save();
+    manager->~Manager();
 }

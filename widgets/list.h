@@ -1,10 +1,11 @@
 #ifndef LIST
 #define LIST
 
-#include "../tools/json.h"
 #include "sublist.h"
 #include "popup.h"
 #include "iconbutton.h"
+#include "../tools/json.h"
+#include "../tools/manager.h"
 
 #include <QWidget>
 #include <QLabel>
@@ -17,7 +18,19 @@ class List : public QWidget
 public:
     List(Id id, QWidget *p);
 
+    void updateList();
+    void changeSublistIndex(Id sublist, size_t index);
+    void removeSublist(Id sublist);
+    void updateSublist(Id sublist);
+    void addSublist(Id sublist);
+    void changeElementIndex(Id sublist, Id element, size_t index);
+    void removeElement(Id sublist, Id element);
+    void updateElement(Id sublist, Id element);
+    void addElement(Id sublist, Id element);
+
     void newElement();
+
+    Id id;
 
 signals:
     void back();
@@ -25,7 +38,7 @@ signals:
     void renamed();
 
 public slots:
-    void addSublist();
+    void addEmptySublist();
 
 private:
     QVBoxLayout *lay = nullptr;
@@ -39,8 +52,7 @@ private:
     QHBoxLayout *sublistsContainerLay = nullptr;
     QPushButton *newSublistButton = nullptr;
     PopUp *popup = nullptr;
-    QList<Sublist *> sublists;
-    Id id;
+    QMap<Id, Sublist *> sublists;
 
     Sublist *sublist = nullptr;
     QPointF sublistDragOffset;

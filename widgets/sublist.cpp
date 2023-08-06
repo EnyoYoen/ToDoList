@@ -8,7 +8,7 @@
 Sublist::Sublist(Id m_list, Id m_sublist, QWidget *p)
     : list(m_list), sublist(m_sublist), QLabel(p)
 {
-    JSublist jsublist = Manager::getSublist(list, sublist);
+    JSublist jsublist = manager->getSublist(list, sublist);
 
     lay = new QVBoxLayout(this);
     QWidget *titleContainer = new QWidget(this);
@@ -54,7 +54,7 @@ Sublist::Sublist(Id m_list, Id m_sublist, QWidget *p)
     lay->addWidget(titleContainer);
     lay->addWidget(elementsScroll);
 
-    for (auto elementId : Manager::getElements(list, sublist))
+    for (auto elementId : manager->getElements(list, sublist))
         createElement(QString(), QString(), elementId);
     lay->addWidget(addButton, 0, Qt::AlignHCenter);
     lay->addSpacing(5);
@@ -69,13 +69,43 @@ Sublist::Sublist(Id m_list, Id m_sublist, QWidget *p)
     QObject::connect(addButton, &QPushButton::clicked, this, &Sublist::newElement);
 }
 
+void Sublist::updateSublist()
+{
+    title->setText(manager->getSublist(list, sublist).title);
+}
+
+void Sublist::changeElementIndex(Id element, size_t index)
+{
+    if (elements[element])
+        elementsLay->insertWidget(index, elementsLay->takeAt(elementsLay->indexOf(elements[element]))->widget());
+}
+
+void Sublist::removeElement(Id element)
+{
+    if (elements[element]) {
+        elements[element]->deleteLater();
+        elements.remove(element);
+    }
+}
+
+void Sublist::updateElement(Id element)
+{
+    if (elements[element])
+        elements[element]->updateElement();
+}
+
+void Sublist::addElement(Id element)
+{
+    createElement(QString(), QString(), element);
+}
+
 void Sublist::rename(QString name)
 {
     title->setText(name);
 
-    JSublist jsublist = Manager::getSublist(list, sublist);
+    JSublist jsublist = manager->getSublist(list, sublist);
     jsublist.title = name;
-    Manager::replaceSublist(list, sublist, jsublist);
+    manager->replaceSublist(list, sublist, jsublist);
 }
 
 void Sublist::newElement()
@@ -107,8 +137,8 @@ bool Sublist::dropElement(Id elementId, Id fromSublist, int y, int elementHeight
         if (pos > elements.size())
             pos = elements.size();
 
-        JElement jelement = Manager::getElement(list, fromSublist, elementId);
-        Manager::removeElement(list, fromSublist, elementId);
+        JElement jelement = manager->getElement(list, fromSublist, elementId);
+        manager->removeElement(list, fromSublist, elementId);
         createElement(jelement.name, jelement.content, InvalidId, pos);
 
         return true;
@@ -124,18 +154,18 @@ void Sublist::createElement(QString name, QString content, Id elementId, int ind
     }
     if (elementId == InvalidId) {
         JElement jelement(name, content);
-        elementId = Manager::addElement(list, sublist, jelement);
+        elementId = manager->addElement(list, sublist, jelement);
         if (index != -1)
-            Manager::setIndexElement(list, sublist, elementId, position);
+            manager->setIndexElement(list, sublist, elementId, position);
     }
     Element *element = new Element(list, sublist, elementId, this);
     elementsLay->insertWidget(position, element);
-    elements.append(element);
+    elements.insert(elementId, element);
 
     QObject::connect(element, &Element::changeButtonClicked, [this, element, elementId]() {
         QList<QStringPair> prompts;
-        prompts.append(QStringPair("Name", Manager::getElement(list, sublist, elementId).name));
-        prompts.append(QStringPair("Content", Manager::getElement(list, sublist, elementId).content));
+        prompts.append(QStringPair("Name", manager->getElement(list, sublist, elementId).name));
+        prompts.append(QStringPair("Content", manager->getElement(list, sublist, elementId).content));
         emit popupRequest(prompts, "Change the element", [this, element](bool cancelled, QStringList prompts) {
             if (!cancelled && !prompts.empty() && !prompts[0].isEmpty()) {
                 element->setNameAndContent(prompts[0], prompts[1]);
@@ -145,8 +175,9 @@ void Sublist::createElement(QString name, QString content, Id elementId, int ind
     QObject::connect(element, &Element::deleteButtonClicked, [this, element, elementId]() {
         emit popupRequest(QList<QStringPair>(), "Are you sure?", [this, element, elementId](bool cancelled, QStringList prompts) {
             if (!cancelled) {
-                Manager::removeElement(list, sublist, elementId);
-                element->deleteLater();
+                manager->removeElement(list, sublist, elementId);
+                elements[elementId]->deleteLater();
+                elements.remove(elementId);
             }
         });
     });

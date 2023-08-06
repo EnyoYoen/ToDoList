@@ -7,12 +7,10 @@
 
 #include <QMouseEvent>
 
-#include <iostream>
-
 Element::Element(Id m_list, Id m_sublist, Id m_element, QWidget *p)
     : list(m_list), sublist(m_sublist), element(m_element), QWidget(p)
 {
-    JElement jelement = Manager::getElement(list, sublist, element);
+    JElement jelement = manager->getElement(list, sublist, element);
 
     lay = new QVBoxLayout(this);
     container = new QWidget(this);
@@ -55,15 +53,22 @@ Element::Element(Id m_list, Id m_sublist, Id m_element, QWidget *p)
     setAttribute(Qt::WA_StyledBackground);
 }
 
+void Element::updateElement()
+{
+    JElement jelement = manager->getElement(list, sublist, element);
+    name->setText(jelement.name);
+    content->setText(jelement.content);
+}
+
 void Element::setNameAndContent(QString nameStr, QString contentStr)
 {
     name->setText(nameStr);
     content->setText(contentStr);
 
-    JElement jelement = Manager::getElement(list, sublist, element);
+    JElement jelement = manager->getElement(list, sublist, element);
     jelement.content = contentStr;
     jelement.name = nameStr;
-    Manager::replaceElement(list, sublist, element, jelement);
+    manager->replaceElement(list, sublist, element, jelement);
 }
 
 void Element::enterEvent(QEnterEvent *)

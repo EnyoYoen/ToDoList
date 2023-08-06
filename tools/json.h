@@ -1,7 +1,7 @@
 #ifndef JSON
 #define JSON
 
-#include "../tools/def.h"
+#include "def.h"
 
 #include <QString>
 #include <QList>
@@ -14,6 +14,9 @@ public:
     JElement(QString name, QString content);
     JElement();
 
+    QJsonObject toJson(Id id);
+
+    Id unmarshalId;
     QString name;
     QString content;
 };
@@ -25,6 +28,9 @@ public:
     JSublist(QString title);
     JSublist();
 
+    QJsonObject toJson(Id list, Id id);
+
+    Id unmarshalId;
     QString title;
     QMap<Id, JElement> elements;
 
@@ -41,12 +47,22 @@ public:
 
     };
 
+    enum Diff {
+        Title = 1,
+        Priority = 2,
+        DType = 4,
+        Timestamp = 8,
+    };
+
     JList(QJsonObject j);
     JList(QString title, Type type, int priority);
     JList();
 
+    QJsonObject toJson(Id id);
+
     Type type;
     int priority;
+    Id unmarshalId;
     QString title;
     QDateTime viewTimestamp;
     QMap<Id, JSublist> sublists;

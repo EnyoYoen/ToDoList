@@ -1,10 +1,11 @@
 #ifndef SUBLIST
 #define SUBLIST
 
-#include "../tools/json.h"
 #include "element.h"
 #include "iconbutton.h"
 #include "verticalscroll.h"
+#include "../tools/json.h"
+#include "../tools/manager.h"
 
 #include <QLabel>
 #include <QPushButton>
@@ -16,11 +17,18 @@ class Sublist : public QLabel
 public:
     Sublist(Id list, Id sublist, QWidget *p);
 
+    void updateSublist();
+    void changeElementIndex(Id element, size_t index);
+    void removeElement(Id element);
+    void updateElement(Id element);
+    void addElement(Id element);
+
     void rename(QString name);
     void deselect();
     bool dropElement(Id elementId, Id fromSublist, int y, int elementHeight);
 
-    QVBoxLayout *lay = nullptr; 
+    QVBoxLayout *lay = nullptr;
+    Id sublist;
 
 signals:
     void renameButtonClicked();
@@ -40,10 +48,9 @@ private:
     QWidget *elementsContainer = nullptr;
     QVBoxLayout *elementsLay = nullptr;
     QPushButton *addButton = nullptr;
-    QList<Element *> elements;
-    Id list, sublist;
+    QMap<Id, Element *> elements;
+    Id list;
     bool press = false;
-
     void createElement(QString name, QString content, Id elementId, int index = -1);
 
     virtual void mousePressEvent(QMouseEvent *e);
