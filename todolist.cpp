@@ -12,6 +12,8 @@
 ToDoList::ToDoList(/*bool hasSidebar, */QWidget *p)
     : QWidget(p)
 {
+    logger.setup();
+
     manager = new Manager();
 
     lay = new QHBoxLayout(this);
@@ -313,4 +315,5 @@ void ToDoList::showEvent(QShowEvent *e)
 void ToDoList::closeEvent(QCloseEvent *)
 {
     manager->~Manager();
+    logger.close();
 }
